@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Divide & Conquer — Sorting Simulator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Divide & Conquer Strategies I: Sorting (MergeSort & QuickSort)</h1>
+  </header>
+
+  <main class="layout">
+    <!-- LEFT: Controls -->
+    <section class="panel left">
+      <h2>Controls</h2>
+
+      <label>Choose Algorithm</label>
+      <select id="algoSelect">
+        <option value="merge">Merge Sort</option>
+        <option value="quick">Quick Sort</option>
+      </select>
+
+      <label>Max value of N</label>
+      <select id="nSelect">
+        <option>5</option>
+        <option>10</option>
+        <option>12</option>
+        <option>15</option>
+        <option>20</option>
+        <option>25</option>
+        <option>50</option>
+        <option>75</option>
+        <option>100</option>
+      </select>
+
+      <label>Array choice</label>
+      <select id="arrayType">
+        <option value="random">Randomly generated</option>
+        <option value="asc">Already sorted (ascending)</option>
+        <option value="desc">Already sorted (descending)</option>
+      </select>
+
+      <div id="pivotContainer" style="display:none;">
+        <label>QuickSort Pivot</label>
+        <select id="pivotChoice">
+          <option value="first">First</option>
+          <option value="middle">Middle</option>
+          <option value="end">End</option>
+        </select>
+      </div>
+
+      <div class="buttons stacked">
+        <button id="generateBtn" class="btn large">Generate Array</button>
+        <div class="two">
+          <button id="confirmBtn" class="btn large primary">Confirm & Prepare Steps</button>
+          <button id="resetBtn" class="btn large danger">Reset</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- CENTER: Visualization & step controls -->
+    <section class="panel center">
+      <h2>Array Visualization</h2>
+
+      <div id="visualScroller" class="visualScroller">
+        <div id="visual" class="arrayVisual"></div>
+        <div id="indicesRow" class="indices"></div>
+      </div>
+
+      <div id="selectedAlgo" class="selectedAlgo">Selected: <em id="selAlgoText">-</em></div>
+
+      <div class="step-controls">
+        <button id="prevStep" class="btn">Previous</button>
+        <button id="nextStep" class="btn primary">Next</button>
+        <span class="stepInfo">Step <span id="stepIndex">0</span> / <span id="stepTotal">0</span></span>
+      </div>
+
+      <div class="stepLog">
+        <h3>Step Log (each step appended)</h3>
+        <div id="logContainer" class="logBox"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Final array, facts -->
+    <section class="panel right">
+      <h2>Result & Analysis</h2>
+
+      <div class="resultBox">
+        <h3>Final Sorted Array</h3>
+        <div id="finalVisual" class="finalVisual">(Sorted array will appear here)</div>
+      </div>
+
+      <div class="facts">
+        <h3>Facts & Analysis</h3>
+        <div id="factsText">Choose algorithm and run to see facts relevant to the run.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
