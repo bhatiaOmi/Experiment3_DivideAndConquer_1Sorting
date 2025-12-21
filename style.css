@@ -1,59 +1,65 @@
-/* ----------------------------------------------- */
-/* SIR’S REQUIRED CONTAINER STRUCTURE (ADDED HERE) */
-/* ----------------------------------------------- */
+/* Global Page Styling */
 
 #mainContainer {
-  display: flex;
-  justify-content: center;
-  font-family: "Times New Roman", Times, serif;
+ display: flex;
+ justify-content: center;
+ font-family: Arial, sans-serif;
 }
 
 #container {
-  width: 1200px;          /* reduced size for less zoom */
-  min-height: 700px;      /* slightly smaller than sir’s 800 */
+  width: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: url("./images/background.jpg") no-repeat;
-  background-size: cover;
-  padding: 18px 22px 26px;
+  padding: 40px 52px 26px;
   box-sizing: border-box;
-  
-}
+  max-width: 1400px;
+  margin: 0 auto;
+  overflow: hidden;
 
+}
 
 /* ----------------------------------------------- */
 /* ROOT VARIABLES */
 /* ----------------------------------------------- */
 
 :root {
-  --bg: #eef7fb;
-  --panel: #fff;
-  --accent: #1d4ed8;
-  --danger: #dc2626;
-  --primary: #0b5ed7;
-  --log-compare: #f97316;
-  --log-swap: #ef4444;
-  --log-pivot: #facc15;
-  --log-merge: #10b981;
+ --bg: #eef7fb;
+ --panel: #fff;
+ --accent: #1d4ed8;
+ --danger: #dc2626;
+ --primary: #0b5ed7;
+ --log-compare: #f97316;
+ --log-swap: #ef4444;
+ --log-pivot: #facc15;
+ --log-merge: #10b981;
 }
-
 
 /* ----------------------------------------------- */
 /* BODY & RESET */
 /* ----------------------------------------------- */
 
 html, body {
-  height: 90%;           /* reduced from 100% → less zoom */
-  margin: 10px;          /* smaller margin */
+ height: 100%;           /* reduced from 100% → less zoom */
+ margin: 0;          /* smaller margin */
 }
 
 body {
-  font-family: "Times New Roman", Times, serif;
-  justify-content: center;
-  background: var(--bg);
-  color: #111;
-  overflow: hidden;       /* page never scrolls */
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    /* no global background here (only on index) */
 }
+
+/* index-specific background */
+body.with-bg {
+    background: url("./images/background.jpg") no-repeat center center fixed;
+    background-size: cover; /* preserve aspect ratio and fill screen */
+}
+
+/* Prevent page scroll on advanced page while letting panels scroll internally
+body.advanced {
+    overflow: hidden;
+} */
 
 
 /* ----------------------------------------------- */
@@ -61,14 +67,14 @@ body {
 /* ----------------------------------------------- */
 
 header {
-  padding: 8px 10px;
-  text-align: center;
+ padding: 18px 10px;
+ text-align: center;
 }
 
 header h1 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
+ margin: 0;
+ font-size: 18px;
+ font-weight: 700;
 }
 
 
@@ -77,25 +83,25 @@ header h1 {
 /* ----------------------------------------------- */
 
 .layout {
-  display: grid;
-  grid-template-columns: 280px 1fr 300px;   /* reduced sizes */
-  gap: 12px;
-  padding: 12px 14px;
-  height: calc(100vh - 140px);              /* slightly smaller */
-  box-sizing: border-box;
+ display: grid;
+ grid-template-columns: 280px 1fr 300px;  
+ gap: 15px;
+ padding: 18px 50px 9px;
+                
+ box-sizing: border-box;
 }
 
 /* Equal height, scroll only inside panel */
 .panel {
-  background: var(--panel);
-  border: 1px solid rgba(15,23,42,0.06);
-  box-shadow: 0 6px 12px rgba(15,23,42,0.04);
-  padding: 10px;
-  border-radius: 8px;
-  height: 100%;
-  overflow: auto;            /* inner scroll only */
-  display: flex;
-  flex-direction: column;
+ background: var(--panel);
+ border: 1px solid rgba(15,23,42,0.06);
+ box-shadow: 0 6px 12px rgba(15,23,42,0.04);
+ padding: 10px;
+ border-radius: 10px;
+ height: 100%;
+ overflow: hidden;           
+ display: flex;
+ flex-direction: column;
 }
 
 /* ----------------------------------------------- */
@@ -104,8 +110,8 @@ header h1 {
 
 .left label,
 .left select {
-  display: block;
-  margin: 6px 0 6px;
+ display: block;
+ margin: 6px 0 6px;
 }
 
 .left select,
@@ -113,42 +119,49 @@ header h1 {
 #arrayType,
 #algoSelect,
 #pivotChoice {
-  width: 100%;
-  padding: 6px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
+ width: 100%;
+ padding: 5px;
+ border-radius: 4px;
+ border: 1px solid #ccc;
 }
 
-.buttons.stacked {
+.bottom-actions {
+  margin-top: 18px;              /* pushes buttons to bottom */
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 10px;
 }
 
-.buttons.stacked .two {
-  display: flex;
-  gap: 8px;
+.run-btn {
+  flex: 1;                       /* equal width buttons */
+  padding: 14px 0;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 10px;
+  text-align: center;
 }
+
+/* .buttons.stacked {
+ display: flex;
+ flex-direction: column;
+ gap: 8px;
+ margin-top: 8px;
+}
+
+} */
 
 .btn {
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  background: #f7f7f8;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.btn.large {
-  font-size: 13px;
-  padding: 8px 10px;
+ padding: 8px 10px;
+ border-radius: 4px;
+ border: 1px solid #ccc;
+ background: #f7f7f8;
+ cursor: pointer;
+ font-weight:400;
 }
 
 .btn.primary {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
+ background: var(--primary);
+ color: #fff;
+ border-color: var(--primary);
 }
 
 .btn.danger {
@@ -163,135 +176,121 @@ header h1 {
 /* ----------------------------------------------- */
 
 .visualScroller {
-  border-radius: 8px;
-  padding: 8px;
-  background: #fff;
-  border: 1px solid rgba(15,23,42,0.04);
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  margin-bottom: 8px;
-  min-height: 110px; /* slightly smaller */
+ border-radius: 8px;
+ padding: 8px;
+ background: #fff;
+ border: 1px solid rgba(15,23,42,0.04);
+ overflow-x: auto;
+ overflow-y: hidden;
+ white-space: nowrap;
+ margin-bottom: 8px;
+ min-height: 110px;
 }
 
 /* array row */
 .arrayVisual {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 6px 4px;
-  min-height: 80px; /* smaller */
+ display: flex;
+ flex-direction: column;
+ gap: 6px;
+ padding: 6px 4px;
+ }
+.arrayItem {
+ display: flex;
+ flex-direction: column;
+ align-items: center;   /* 🔑 centers index under box */
+ gap: 4px;
+ flex: 0 0 auto;
 }
 
 .arrayBox {
-  min-width: 60px;
-  height: 60px;
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 14px;   /* smaller font */
-  border-radius: 6px;
-  border: 2px solid #0f172a;
-  background: #fff;
-  margin: 0 4px;
+ min-width: 60px;
+ height: 60px;
+ flex: 0 0 auto;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-weight: 700;
+ font-size: 14px;  
+ border-radius: 6px;
+ border: 2px solid #0f172a;
+ background: #fff;
 }
 
 .arrayBox.small {
-  min-width: 45px;
-  height: 45px;
-  font-size: 12px;
+ min-width: 45px;
+ height: 45px;
+ font-size: 12px;
 }
 
-/* indexes aligned */
-.indices {
-  display: flex;
-  gap: 10px;
-  padding: 4px 4px 0 4px;
-  margin-top: 4px;
-  white-space: nowrap;
-  align-items: flex-start;
+.arrayRow {
+ display: flex;
+ gap: 10px;
+ align-items: center;
 }
+
 
 .arrayIndex {
-  flex: 0 0 60px;
-  text-align: center;
-  font-weight: 600;
-  color: #333;
+ width: 60px;          
+ text-align: center;
+ font-weight: 600;
+ font-size: 13px;
+ color: #333;
 }
 
 .arrayIndex.small {
-  flex: 0 0 45px;
+ width: 45px;
+ font-size: 12px;
 }
-
-/* Index row under array visualization */
-.index-row {
-  display: flex;
-  justify-content: center;
-  margin-top: 6px;
-}
-
-.index-item {
-  width: 36px;           /* same width as array box */
-  text-align: center;
-  font-size: 14px;
-  color: #222;
-  font-weight: 600;
-}
-
-
 
 /* ----------------------------------------------- */
 /* STEP NAVIGATION */
 /* ----------------------------------------------- */
 
 .selectedAlgo {
-  margin-top: 6px;
-  font-size: 13px;
+ margin-top: 6px;
+ font-size: 12px;
 }
 
 .step-controls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
+ display: flex;
+ align-items: center;
+ gap: 4px;
+ margin-top: 6px;
 }
 
 .stepInfo {
-  margin-left: auto;
-  font-weight: 600;
-  font-size: 13px;
+ margin-left: auto;
+ font-weight: 500;
+ font-size: 12px;
 }
-
 
 /* ----------------------------------------------- */
 /* STEP LOG – FIXED SIZE, INTERNAL SCROLL ONLY */
 /* ----------------------------------------------- */
 
 .stepLog {
-  margin-top: 10px;
+ margin-top: 10px;
 }
 
 .logBox {
-  width: 100%;
-  height: 200px;          /* slightly smaller */
-  max-height: 200px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid rgba(15,23,42,0.04);
-  background: #fcfeff;
+ width: 100%;
+ height: 200px;         
+ max-height: 200px;
+ overflow-y: auto;
+ overflow-x: hidden;
+ padding: 6px;
+ border-radius: 6px;
+ border: 1px solid rgba(15,23,42,0.04);
+ background: #fcfeff;
 }
 
 .logEntry {
-  padding: 6px;
-  border-radius: 6px;
-  margin-bottom: 6px;
-  font-size: 13px;
-  background: #fff;
-  border-left: 6px solid transparent;
+ padding: 6px;
+ border-radius: 6px;
+ margin-bottom: 6px;
+ font-size: 13px;
+ background: #fff;
+ border-left: 6px solid transparent;
 }
 
 .log-compare { border-left-color: var(--log-compare); }
@@ -300,12 +299,12 @@ header h1 {
 .log-merge   { border-left-color: var(--log-merge); }
 
 .log-done {
-  border-left-color: #111;
-  background: #f3f4f6;
+ border-left-color: #111;
+ background: #f3f4f6;
 }
 
 .log-highlight {
-  box-shadow: inset 0 0 0 2px rgba(16,24,40,0.05);
+ box-shadow: inset 0 0 0 2px rgba(16,24,40,0.05);
 }
 
 
@@ -314,30 +313,30 @@ header h1 {
 /* ----------------------------------------------- */
 
 .resultBox {
-  background: #fff;
-  border: 1px solid #eee;
-  padding: 8px;
-  border-radius: 6px;
+ background: #fff;
+ border: 1px solid #eee;
+ padding: 8px;
+ border-radius: 6px;
 }
 
 .finalVisual {
-  min-height: 55px;
-  background: #f9fafb;
-  border: 1px dashed #ddd;
-  padding: 6px;
-  border-radius: 6px;
-  overflow: auto;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+ min-height: 55px;
+ background: #f9fafb;
+ border: 1px dashed #ddd;
+ padding: 6px;
+ border-radius: 6px;
+ overflow: auto;
+ display: flex;
+ flex-wrap: wrap;
+ gap: 6px;
 }
 
 .facts {
-  margin-top: 10px;
-  background: #fff;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #eee;
+ margin-top: 10px;
+ background: #fff;
+ padding: 8px;
+ border-radius: 6px;
+ border: 1px solid #eee;
 }
 
 
@@ -346,11 +345,78 @@ header h1 {
 /* ----------------------------------------------- */
 
 @media (max-width: 980px) {
-  .layout {
-    grid-template-columns: 1fr;
-    height: calc(100vh - 160px);
-  }
-  .arrayBox { min-width: 45px; height: 45px; }
-  .arrayIndex { flex: 0 0 45px; }
-  .logBox { height: 160px; }
+ .layout {
+   grid-template-columns: 1fr;
+   height: calc(100vh - 160px);
+ }
+ .arrayBox { min-width: 45px; height: 45px; }
+ .arrayIndex { flex: 0 0 45px; }
+ .logBox { height: 160px; }
 }
+
+
+
+/* =====================================
+  GLOBAL BUTTON HOVER & ACTIVE EFFECTS
+  ===================================== */
+
+.btn {
+ transition:
+   transform 0.2s ease,
+   box-shadow 0.2s ease,
+   background-color 0.2s ease,
+   filter 0.2s ease;
+}
+
+/* Hover effect for all buttons */
+.btn:hover {
+ transform: translateY(-2px);
+ box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+ filter: brightness(1.05);
+}
+
+/* Click / active effect */
+.btn:active {
+ transform: translateY(0);
+ box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+ filter: brightness(0.98);
+}
+/* ===============================
+  QUICK SORT POINTER ROW (P & Q)
+  =============================== */
+
+.pointerRow {
+ display: flex;
+ gap: 10px;
+ padding-bottom: 4px;
+ margin-bottom: 4px;
+}
+
+.pointerCell {
+ width: 60px;                
+ height: 18px;
+ display: flex;
+ align-items: center;
+ justify-content: center;     /* 🔑 centers P/Q perfectly */
+ font-weight: 700;
+ font-size: 13px;
+}
+
+.pointerCell.small {
+ width: 45px;              
+ font-size: 12px;
+}
+
+.pointerP {
+ color: #2563eb;              /* blue */
+}
+
+.pointerQ {
+ color: #dc2626;              /* red */
+}
+
+
+
+
+
+
