@@ -316,7 +316,7 @@ header h1 {
  background: #fff;
  border: 1px solid #eee;
  padding: 8px;
- border-radius: 6px;
+ border-radius: 4px;
 }
 
 .finalVisual {
@@ -381,42 +381,4 @@ header h1 {
  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
  filter: brightness(0.98);
 }
-/* ===============================
-  QUICK SORT POINTER ROW (P & Q)
-  =============================== */
-
-.pointerRow {
- display: flex;
- gap: 10px;
- padding-bottom: 4px;
- margin-bottom: 4px;
-}
-
-.pointerCell {
- width: 60px;                
- height: 18px;
- display: flex;
- align-items: center;
- justify-content: center;     /* 🔑 centers P/Q perfectly */
- font-weight: 700;
- font-size: 13px;
-}
-
-.pointerCell.small {
- width: 45px;              
- font-size: 12px;
-}
-
-.pointerP {
- color: #2563eb;              /* blue */
-}
-
-.pointerQ {
- color: #dc2626;              /* red */
-}
-
-
-
-
-
 

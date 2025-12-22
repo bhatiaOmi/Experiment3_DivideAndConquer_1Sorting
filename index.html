@@ -19,6 +19,9 @@
 
      <label>Choose Algorithm</label>
      <select id="algoSelect">
+       <option value="" disabled selected hidden>
+        -- Select Algorithm --
+       </option>
        <option value="merge">Merge Sort</option>
        <option value="quick">Quick Sort</option>
      </select>
@@ -40,15 +43,6 @@
        <option value="asc">Already sorted (ascending)</option>
        <option value="desc">Already sorted (descending)</option>
      </select>
-
-     <div id="pivotContainer" style="display:none;">
-       <label>QuickSort Pivot</label>
-       <select id="pivotChoice">
-         <option value="first">First</option>
-         <option value="middle">Middle</option>
-         <option value="end">End</option>
-       </select>
-     </div>
 
      <div class="bottom-actions">
       <button id="runBtn" class="btn primary run-btn">

@@ -1,12 +1,8 @@
 // script.js - final: exact algorithms per your specification
 const algoSelect = document.getElementById('algoSelect');
 const arrayType = document.getElementById('arrayType');
-const pivotContainer = document.getElementById('pivotContainer');
-const pivotChoice = document.getElementById('pivotChoice');
 
 const runBtn = document.getElementById("runBtn");
-// const generateBtn = document.getElementById('generateBtn');
-// const confirmBtn = document.getElementById('confirmBtn');
 const resetBtn = document.getElementById('resetBtn');
 
 const visual = document.getElementById('visual');
@@ -25,10 +21,10 @@ const nRange = document.getElementById('nRange');
 const nValue = document.getElementById('nValue');
 
 // ===== Neutral defaults on load =====
-algoSelect.selectedIndex = -1;     // No algorithm selected
+algoSelect.value = "";    // No algorithm selected
 selAlgoText.textContent = '-';
 factsText.textContent = 'Select an algorithm to view facts and analysis.';
-pivotContainer.style.display = 'none';
+
 
 nRange.value = 0;
 nValue.textContent = '0';
@@ -45,25 +41,24 @@ let visitedMax = -1;
 let stepCounter = 0; // global sequential step numbering
 
 // show/hide pivot control
-function showPivotControl(){ pivotContainer.style.display = (algoSelect.value === 'quick') ? 'block' : 'none'; }
+
 algoSelect.addEventListener('change', ()=>{
   if (!algoSelect.value) return;
 
  selAlgoText.textContent =
    algoSelect.value === 'merge' ? 'Merge Sort' : 'Quick Sort';
 
- pivotContainer.style.display =
-   algoSelect.value === 'quick' ? 'block' : 'none';
-   resetAll();
+
+   
    setFacts();
 });
 
- showPivotControl();
+
  // Neutral defaults on load
 algoSelect.selectedIndex = -1;     // no algorithm selected
 selAlgoText.textContent = '-';
 factsText.textContent = 'Select an algorithm to view facts and analysis.';
-pivotContainer.style.display = 'none';
+
 
 // helpers
 function generateRandomArray(n){ return Array.from({length:n}, ()=>Math.floor(Math.random()*99)+1); }
@@ -74,36 +69,7 @@ function renderArrayBoxes(arr, highlight = {}) {
  visual.innerHTML = '';
  const small = arr.length > 12;
 
- /* ---------- POINTER ROW ---------- */
- if (
- algoSelect.value === 'quick' &&
- (highlight.P !== undefined || highlight.Q !== undefined)
-) {
- const pointerRow = document.createElement('div');
- pointerRow.className = 'arrayRow';
-
- arr.forEach((_, i) => {
-   const item = document.createElement('div');
-   item.className = 'arrayItem';   // 🔑 SAME wrapper as array box
-
-   const cell = document.createElement('div');
-   cell.className = 'pointerCell' + (small ? ' small' : '');
-
-   if (i === highlight.P) {
-     cell.textContent = 'P';
-     cell.classList.add('pointerP');
-   } else if (i === highlight.Q) {
-     cell.textContent = 'Q';
-     cell.classList.add('pointerQ');
-   }
-
-   item.appendChild(cell);
-   pointerRow.appendChild(item);
- });
-
- visual.appendChild(pointerRow);
-}
-
+ 
  /* ---------- ARRAY + INDEX ---------- */
  const arrayRow = document.createElement('div');
  arrayRow.className = 'arrayRow';
@@ -184,27 +150,39 @@ runBtn.addEventListener('click', () => {
 
 });
 
-// confirmBtn.addEventListener('click', ()=>{
-//    if(!baseArray.length){
-//        alert('Generate an array first');
-//        return; } prepareSteps(); });
+
 
 prevStep.addEventListener('click', ()=>{ if(curStep>0){ curStep--; showStep(curStep,false); } });
 nextStep.addEventListener('click', ()=>{ if(curStep < steps.length-1){ curStep++; const append = curStep>visitedMax; showStep(curStep, append); if(append) visitedMax = curStep; }});
 
 // Prepare steps using exact algorithms requested
 function prepareSteps(){
- steps = []; curStep = -1; visitedMax = -1; stepCounter = 0;
- const arr = baseArray.slice();
- if(algoSelect.value === 'merge') mergeSortTrace(arr);
- else quickSortTrace(arr, pivotChoice.value);
- steps.push({type:'done', description: 'Algorithm finished. Final sorted array.', array: arr.slice(), step: ++stepCounter});
- stepTotal.textContent = steps.length;
- stepIndex.textContent = 0;
- logContainer.innerHTML = '';
- renderArrayBoxes(baseArray);
- renderFinal([]);
- setFacts();
+  steps = []; 
+  curStep = -1; 
+  visitedMax = -1; 
+  stepCounter = 0;
+
+  const arr = baseArray.slice();
+
+  if (algoSelect.value === 'merge') {
+    mergeSortTrace(arr);
+  } else if (algoSelect.value === 'quick') {
+    quickSortTrace(arr);
+  }
+
+  steps.push({
+    type:'done',
+    description: 'Algorithm finished. Final sorted array.',
+    array: arr.slice(),
+    step: ++stepCounter
+  });
+
+  stepTotal.textContent = steps.length;
+  stepIndex.textContent = 0;
+  logContainer.innerHTML = '';
+  renderArrayBoxes(baseArray);
+  renderFinal([]);
+  setFacts();
 }
 
 /* ===== MERGE SORT (top-down) with stepwise clear messages ===== */
@@ -243,94 +221,100 @@ function mergeSortTrace(arr){
  rec(0, arr.length-1);
 }
 
-/* ===== QUICK SORT with P & Q pointers as you specified =====
-  Pivot: first / middle / end
-  P starts at left+1, Q at right
-  Move P right until array[P] > pivot
-  Move Q left until array[Q] <= pivot
-  If P < Q -> swap array[P], array[Q] and continue
-  If P >= Q -> swap pivot (at pivotIndex) with array[Q]; pivot final at Q
+/* ===== QUICK SORT (Median-of-Three Pivot, P & Q pointers) =====
+   - Pivot is chosen as median of first, middle, last elements
+   - Partitioning uses P & Q pointers (Hoare-style)
+   - Only pivot selection is optimized
 */
-function quickSortTrace(arr, pivotChoiceVal='first'){
- function getPivotIndex(l,r){
-   if(pivotChoiceVal === 'first') return l;
-   if(pivotChoiceVal === 'middle') return Math.floor((l+r)/2);
-   if(pivotChoiceVal === 'end') return r;
-   return l;
- }
 
- function partition(l,r){
-   const pivotIndex = getPivotIndex(l,r);
-   const pivotValue = arr[pivotIndex];
+function quickSortTrace(arr) {
 
-   // if pivot not at left, swap it to left (so algorithm expects pivot at left)
-   if(pivotIndex !== l){
-     [arr[l], arr[pivotIndex]] = [arr[pivotIndex], arr[l]];
-   }
+  // -------- MEDIAN OF THREE PIVOT SELECTION --------
+  function medianOfThree(l, r) {
+    const m = Math.floor((l + r) / 2);
 
-   // sentinel-like bounds are handled by bounds checks
-   let P = l + 1;
-   let Q = r;
+    if (arr[l] > arr[m]) [arr[l], arr[m]] = [arr[m], arr[l]];
+    if (arr[l] > arr[r]) [arr[l], arr[r]] = [arr[r], arr[l]];
+    if (arr[m] > arr[r]) [arr[m], arr[r]] = [arr[r], arr[m]];
 
-   while(true){
-     // Move P right until array[P] > pivot OR P > r
-     while(P <= r && arr[P] <= arr[l]){
-     steps.push({
-     type: 'moveP',
-     description: `(Step ${++stepCounter}) Move Pointer_1 (P) → ${P}`,
-     array: arr.slice(),
-     highlight: { P, Q },
-     step: stepCounter
-     });
-     P++;
-   }
+    return m; // index of median element
+  }
 
-     // Move Q left until array[Q] <= pivot OR Q < l+1
-     while(Q >= l+1 && arr[Q] > arr[l]){
-     steps.push({
-     type: 'moveQ',
-     description: `(Step ${++stepCounter}) Move Pointer_2 (Q) ← ${Q}`,
-     array: arr.slice(),
-     highlight: { P, Q },
-     step: stepCounter
-   });
-   Q--;
- }
-     // check crossing
-     if(P < Q){
-       // swap arr[P] and arr[Q]
-       [arr[P], arr[Q]] = [arr[Q], arr[P]];
-       steps.push({
-       type: 'swap',
-       description: `(Step ${++stepCounter}) Swap indices ${P} and ${Q}`,
-       array: arr.slice(),
-       highlight: { swap: [P, Q], P, Q },
-       step: stepCounter
-     });
-     } else {
-       // P >= Q: swap pivot (at l) with arr[Q]; pivot final at Q
-       [arr[l], arr[Q]] = [arr[Q], arr[l]];
-       steps.push({
-       type: 'pivot-place',
-       description: `(Step ${++stepCounter}) Place pivot at ${Q}`,
-       array: arr.slice(),
-       highlight: { pivot: Q },
-       step: stepCounter
-     });
-     return Q;
-   }
- }
- }
+  function partition(l, r) {
 
- function rec(l,r){
-   steps.push({type:'q-split', description:`(Step ${++stepCounter}) QuickSort on [${l}..${r}]`, array: arr.slice(), step: stepCounter});
-   if(l >= r) return;
-   const p = partition(l,r);
-   rec(l, p-1);
-   rec(p+1, r);
- }
+    // ----- MEDIAN-OF-THREE PIVOT -----
+    const pivotIndex = medianOfThree(l, r);
+    const pivotValue = arr[pivotIndex];
 
- rec(0, arr.length-1);
+    // move pivot to left (algorithm expects pivot at l)
+    [arr[l], arr[pivotIndex]] = [arr[pivotIndex], arr[l]];
+
+    let P = l + 1;
+    let Q = r;
+
+    while (true) {
+
+      // Move P right while element <= pivot
+      while (P <= r && arr[P] <= arr[l]) {
+        steps.push({
+          type: 'moveP',
+          description: `(Step ${++stepCounter}) Move Pointer_1 (P) → ${P}`,
+          array: arr.slice(),
+          step: stepCounter
+        });
+        P++;
+      }
+
+      // Move Q left while element > pivot
+      while (Q >= l + 1 && arr[Q] > arr[l]) {
+        steps.push({
+          type: 'moveQ',
+          description: `(Step ${++stepCounter}) Move Pointer_2 (Q) ← ${Q}`,
+          array: arr.slice(),
+          step: stepCounter
+        });
+        Q--;
+      }
+
+      // Swap or place pivot
+      if (P < Q) {
+        [arr[P], arr[Q]] = [arr[Q], arr[P]];
+        steps.push({
+          type: 'swap',
+          description: `(Step ${++stepCounter}) Swap indices ${P} and ${Q}`,
+          array: arr.slice(),
+          step: stepCounter
+        });
+      } else {
+        // Place pivot at correct position
+        [arr[l], arr[Q]] = [arr[Q], arr[l]];
+        steps.push({
+          type: 'pivot-place',
+          description: `(Step ${++stepCounter}) Place pivot at index ${Q}`,
+          array: arr.slice(),
+          step: stepCounter
+        });
+        return Q;
+      }
+    }
+  }
+
+  function rec(l, r) {
+    steps.push({
+      type: 'q-split',
+      description: `(Step ${++stepCounter}) QuickSort on range [${l}..${r}]`,
+      array: arr.slice(),
+      step: stepCounter
+    });
+
+    if (l >= r) return;
+
+    const p = partition(l, r);
+    rec(l, p - 1);
+    rec(p + 1, r);
+  }
+
+  rec(0, arr.length - 1);
 }
 
 /* ===== showStep & logging behavior ===== */
@@ -377,37 +361,66 @@ function highlightLogEntry(index){
 }
 
 function resetAll(){
- baseArray = []; steps = []; curStep = -1; visitedMax = -1; stepCounter = 0;
- visual.innerHTML = ''; finalVisual.innerHTML = '(Sorted array will appear here)';
- logContainer.innerHTML = ''; stepIndex.textContent = 0; stepTotal.textContent = 0; factsText.textContent = 'Choose algorithm and run to see facts relevant to the run.';
+  // reset data
+  baseArray = [];
+  steps = [];
+  curStep = -1;
+  visitedMax = -1;
+  stepCounter = 0;
+
+  // reset visuals
+  visual.innerHTML = '';
+  finalVisual.innerHTML = '(Sorted array will appear here)';
+  logContainer.innerHTML = '';
+
+  // reset step counters
+  stepIndex.textContent = 0;
+  stepTotal.textContent = 0;
+
+  // reset N slider
+  nRange.value = 0;
+  nValue.textContent = '0';
+
+  // reset algorithm selection 
+  algoSelect.value = "";
+  selAlgoText.textContent = "-";
+
+  // reset facts
+  factsText.textContent = 'Select an algorithm to view facts and analysis.';
 }
 
 function setFacts(){
- if (!algoSelect.value) {
-   factsText.textContent = 'Select an algorithm to view facts and analysis.';
-   return;
- }
+  if (!algoSelect.value) {
+    factsText.textContent = 'Select an algorithm to view facts and analysis.';
+    return;
+  }
 
- if(algoSelect.value === 'quick'){
-   const p = pivotChoice.value;
-   let html = `<strong>QuickSort (pivot = ${p}):</strong><ul style="margin:8px 0 8px 18px">`;
-   html += `<li>Average: O(n log n). Worst-case: O(n²).</li>`;
-   if(p==='first') html += `<li>Pivot = first: already-sorted ascending arrays produce worst-case.</li>`;
-   if(p==='end') html += `<li>Pivot = end: reverse-sorted arrays produce worst-case.</li>`;
-   if(p==='middle') html += `<li>Pivot = middle: reduces chance of worst-case.</li>`;
-   html += `<li>Uses P and Q pointers; pivot placed at Q.</li></ul>`;
-   factsText.innerHTML = html;
- } else if (algoSelect.value === 'merge') {
-   factsText.innerHTML = `<strong>MergeSort:</strong><ul style="margin:8px 0 8px 18px">
-     <li>Divide recursively until subarrays of size 1.</li>
-     <li>Merge sorted halves.</li>
-     <li>Time: O(n log n), Space: O(n).</li>
-   </ul>`;
- }
+  if (algoSelect.value === 'quick') {
+    factsText.innerHTML = `
+      <strong>Quick Sort (Median-of-Three Pivot Selection):</strong>
+      <ul style="margin:8px 0; padding-left: 10px;">
+        <li>The pivot is chosen as the <strong>median of the first, middle, and last </strong>elements.</li>
+        <li>This strategy reduces the probability of worst-case behavior for sorted or reverse-sorted inputs.</li>
+        <li>Partitioning is performed using two inward-moving pointers (P and Q).</li>
+        <li>Elements less than or equal to the pivot are placed to the left; greater elements to the right.</li>
+        <li>Average time complexity: <strong>O(n log n)</strong>.</li>
+        <li>Worst-case time complexity: <strong>O(n²)</strong>, occurs when maximum (or minimum) element is chosen as the pivot.</li>
+        <li>The algorithm is in-place and requires no additional auxiliary memory.</li>
+      </ul>
+    `;
+  } 
+  else if (algoSelect.value === 'merge') {
+    factsText.innerHTML = `
+      <strong>Merge Sort:</strong>
+      <ul style="margin:8px 0; padding-left: 10px;">
+        <li>Merge Sort divides the array deterministically into equal halves.</li>
+        <li>Each subarray is sorted and merged to produce the final sorted array.</li>
+        <li>Time complexity is consistently <strong>O(n log n)</strong> for all cases.</li>
+        <li>Requires additional memory proportional to the array size.</li>
+        <li>Merge Sort is a stable sorting algorithm.</li>
+      </ul>
+    `;
+  }
 }
-// initialize
-resetAll();
-
-
 
 
