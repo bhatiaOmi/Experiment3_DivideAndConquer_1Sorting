@@ -1,12 +1,14 @@
-// script.js - final: exact algorithms per your specification
+// script.js - Enhanced with proper median-of-three QuickSort
 const algoSelect = document.getElementById('algoSelect');
 const arrayType = document.getElementById('arrayType');
 
 const runBtn = document.getElementById("runBtn");
 const resetBtn = document.getElementById('resetBtn');
+const autoRunBtn = document.getElementById('autoRun');
 
-const visual = document.getElementById('visual');
-//const indicesRow = document.getElementById('indicesRow');
+const originalArrayEl = document.getElementById('originalArray');
+const currentArrayEl = document.getElementById('currentArray');
+const subArraysEl = document.getElementById('subArrays');
 const finalVisual = document.getElementById('finalVisual');
 
 const selAlgoText = document.getElementById('selAlgoText');
@@ -20,11 +22,10 @@ const factsText = document.getElementById('factsText');
 const nRange = document.getElementById('nRange');
 const nValue = document.getElementById('nValue');
 
-// ===== Neutral defaults on load =====
-algoSelect.value = "";    // No algorithm selected
+// Neutral defaults on load
+algoSelect.value = "";
 selAlgoText.textContent = '-';
 factsText.textContent = 'Select an algorithm to view facts and analysis.';
-
 
 nRange.value = 0;
 nValue.textContent = '0';
@@ -35,67 +36,28 @@ nRange.addEventListener('input', () => {
 });
 
 let baseArray = [];
-let steps = [];      // ordered list of step objects
+let originalArray = [];
+let steps = [];
 let curStep = -1;
-let visitedMax = -1;
-let stepCounter = 0; // global sequential step numbering
+let stepCounter = 0;
+let autoRunInterval = null;
 
-// show/hide pivot control
-
+// Algorithm selection
 algoSelect.addEventListener('change', ()=>{
   if (!algoSelect.value) return;
-
- selAlgoText.textContent =
-   algoSelect.value === 'merge' ? 'Merge Sort' : 'Quick Sort';
-
-
-   
-   setFacts();
+  selAlgoText.textContent =
+    algoSelect.value === 'merge' ? 'Merge Sort' : 'Quick Sort';
+  setFacts();
 });
 
-
- // Neutral defaults on load
-algoSelect.selectedIndex = -1;     // no algorithm selected
-selAlgoText.textContent = '-';
-factsText.textContent = 'Select an algorithm to view facts and analysis.';
-
-
 // helpers
-function generateRandomArray(n){ return Array.from({length:n}, ()=>Math.floor(Math.random()*99)+1); }
-function escapeHtml(s){ if(!s) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+function generateRandomArray(n){ 
+  return Array.from({length:n}, ()=>Math.floor(Math.random()*99)+1); 
+}
 
-// rendering
-function renderArrayBoxes(arr, highlight = {}) {
- visual.innerHTML = '';
- const small = arr.length > 12;
-
- 
- /* ---------- ARRAY + INDEX ---------- */
- const arrayRow = document.createElement('div');
- arrayRow.className = 'arrayRow';
-
- arr.forEach((v, i) => {
-   const item = document.createElement('div');
-   item.className = 'arrayItem';
-
-   const box = document.createElement('div');
-   box.className = 'arrayBox' + (small ? ' small' : '');
-   box.textContent = v;
-
-   if (highlight.compare?.includes(i)) box.style.borderColor = 'var(--log-compare)';
-   if (highlight.swap?.includes(i)) box.style.borderColor = 'var(--log-swap)';
-   if (highlight.pivot === i) box.style.borderColor = 'var(--log-pivot)';
-
-   const idx = document.createElement('div');
-   idx.className = 'arrayIndex' + (small ? ' small' : '');
-   idx.textContent = i;
-
-   item.appendChild(box);
-   item.appendChild(idx);
-   arrayRow.appendChild(item);
- });
-
- visual.appendChild(arrayRow);
+function escapeHtml(s){ 
+  if(!s) return ''; 
+  return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); 
 }
 
 function renderFinal(arr){
@@ -110,6 +72,7 @@ function renderFinal(arr){
    e.style.background='#eef2ff';
    e.style.border='1px solid #dbeafe';
    e.style.borderRadius='6px';
+   e.style.fontWeight='600';
    e.textContent = v;
    finalVisual.appendChild(e);
  });
@@ -117,12 +80,18 @@ function renderFinal(arr){
 
 // control handlers
 resetBtn.addEventListener('click', resetAll);
+
 runBtn.addEventListener('click', () => {
  const n = Number(nRange.value);  
  const t = arrayType.value;
 
  if (n <= 0) {
    alert("Please choose N > 0");
+   return;
+ }
+
+ if (!algoSelect.value) {
+   alert("Please select an algorithm first");
    return;
  }
 
@@ -133,33 +102,76 @@ runBtn.addEventListener('click', () => {
        ? Array.from({ length: n }, (_, i) => i + 1)
        : Array.from({ length: n }, (_, i) => n - i);
 
- renderArrayBoxes(baseArray);
+ originalArray = baseArray.slice();
+ originalArrayEl.textContent = '[' + originalArray.join(', ') + ']';
+ currentArrayEl.textContent = '[' + baseArray.join(', ') + ']';
+ subArraysEl.innerHTML = '';
+
  renderFinal([]);
 
  logContainer.innerHTML = '';
  steps = [];
  curStep = -1;
- visitedMax = -1;
  stepCounter = 0;
  stepIndex.textContent = 0;
  stepTotal.textContent = 0;
 
- if(!baseArray.length){
-       alert('Generate an array first');
-       return; } prepareSteps(); 
-
+ prepareSteps(); 
 });
 
+prevStep.addEventListener('click', ()=>{ 
+  if(curStep > 0){ 
+    curStep--; 
+    removeLastLogEntry();
+    showStep(curStep, false); 
+  } 
+});
 
+nextStep.addEventListener('click', ()=>{ 
+  if(curStep < steps.length-1){ 
+    curStep++; 
+    showStep(curStep, true); 
+  }
+});
 
-prevStep.addEventListener('click', ()=>{ if(curStep>0){ curStep--; showStep(curStep,false); } });
-nextStep.addEventListener('click', ()=>{ if(curStep < steps.length-1){ curStep++; const append = curStep>visitedMax; showStep(curStep, append); if(append) visitedMax = curStep; }});
+// Auto Run functionality
+autoRunBtn.addEventListener('click', () => {
+  if (autoRunInterval) {
+    // Stop auto run
+    clearInterval(autoRunInterval);
+    autoRunInterval = null;
+    autoRunBtn.textContent = '▶️ Auto';
+    autoRunBtn.classList.remove('danger');
+    autoRunBtn.classList.add('primary');
+  } else {
+    // Start auto run
+    if (steps.length === 0) {
+      alert("Please generate an array first");
+      return;
+    }
+    autoRunBtn.textContent = '⏸️ Pause';
+    autoRunBtn.classList.remove('primary');
+    autoRunBtn.classList.add('danger');
+    
+    autoRunInterval = setInterval(() => {
+      if (curStep < steps.length - 1) {
+        curStep++;
+        showStep(curStep, true);
+      } else {
+        clearInterval(autoRunInterval);
+        autoRunInterval = null;
+        autoRunBtn.textContent = '▶️ Auto';
+        autoRunBtn.classList.remove('danger');
+        autoRunBtn.classList.add('primary');
+      }
+    }, 800); // 800ms delay between steps
+  }
+});
 
-// Prepare steps using exact algorithms requested
+// Prepare steps using exact algorithms
 function prepareSteps(){
   steps = []; 
   curStep = -1; 
-  visitedMax = -1; 
   stepCounter = 0;
 
   const arr = baseArray.slice();
@@ -172,143 +184,269 @@ function prepareSteps(){
 
   steps.push({
     type:'done',
-    description: 'Algorithm finished. Final sorted array.',
+    description: '✓ Algorithm finished. Final sorted array.',
     array: arr.slice(),
+    subArrays: [],
     step: ++stepCounter
   });
 
   stepTotal.textContent = steps.length;
   stepIndex.textContent = 0;
   logContainer.innerHTML = '';
-  renderArrayBoxes(baseArray);
+  currentArrayEl.textContent = '[' + originalArray.join(', ') + ']';
+  subArraysEl.innerHTML = '';
   renderFinal([]);
   setFacts();
 }
 
-/* ===== MERGE SORT (top-down) with stepwise clear messages ===== */
+/* ===== MERGE SORT ===== */
 function mergeSortTrace(arr){
  function merge(l,m,r){
-   steps.push({type:'merge-start', description:`(Step ${++stepCounter}) Start merging ranges [${l}..${m}] and [${m+1}..${r}]`, array: arr.slice(), highlight:{merge:[l,r]}, step: stepCounter});
+   const leftArr = arr.slice(l,m+1);
+   const rightArr = arr.slice(m+1,r+1);
+   
+   steps.push({
+     type:'merge-start', 
+     description:`Split → [${leftArr.join(',')}] | [${rightArr.join(',')}]`, 
+     array: arr.slice(), 
+     subArrays: [leftArr, rightArr],
+     step: ++stepCounter
+   });
+   
    const left = arr.slice(l,m+1), right = arr.slice(m+1,r+1);
    let i=0,j=0,k=l;
+   
    while(i<left.length && j<right.length){
-     steps.push({type:'compare', description:`(Step ${++stepCounter}) Compare left[${i}]=${left[i]} and right[${j}]=${right[j]}`, array: arr.slice(), highlight:{compare:[k,m+1+j]}, step: stepCounter});
+     steps.push({
+       type:'compare', 
+       description:`Compare ${left[i]} and ${right[j]}`, 
+       array: arr.slice(), 
+       subArrays: [leftArr, rightArr],
+       step: ++stepCounter
+     });
+     
      if(left[i] <= right[j]){
        arr[k] = left[i++];
-       steps.push({type:'place', description:`(Step ${++stepCounter}) Place ${arr[k]} at index ${k} from left`, array: arr.slice(), highlight:{merge:[l,r]}, step: stepCounter});
+       steps.push({
+         type:'place', 
+         description:`Place ${arr[k]} at index ${k} from left`, 
+         array: arr.slice(), 
+         subArrays: [leftArr, rightArr],
+         step: ++stepCounter
+       });
      } else {
        arr[k] = right[j++];
-       steps.push({type:'place', description:`(Step ${++stepCounter}) Place ${arr[k]} at index ${k} from right`, array: arr.slice(), highlight:{merge:[l,r]}, step: stepCounter});
+       steps.push({
+         type:'place', 
+         description:`Place ${arr[k]} at index ${k} from right`, 
+         array: arr.slice(), 
+         subArrays: [leftArr, rightArr],
+         step: ++stepCounter
+       });
      }
      k++;
    }
+   
    while(i<left.length){
      arr[k++] = left[i++];
-     steps.push({type:'place', description:`(Step ${++stepCounter}) Place remaining ${arr[k-1]} at index ${k-1}`, array: arr.slice(), highlight:{merge:[l,r]}, step: stepCounter});
+     steps.push({
+       type:'place', 
+       description:`Place remaining ${arr[k-1]} at index ${k-1}`, 
+       array: arr.slice(), 
+       subArrays: [leftArr, rightArr],
+       step: ++stepCounter
+     });
    }
+   
    while(j<right.length){
      arr[k++] = right[j++];
-     steps.push({type:'place', description:`(Step ${++stepCounter}) Place remaining ${arr[k-1]} at index ${k-1}`, array: arr.slice(), highlight:{merge:[l,r]}, step: stepCounter});
+     steps.push({
+       type:'place', 
+       description:`Place remaining ${arr[k-1]} at index ${k-1}`, 
+       array: arr.slice(), 
+       subArrays: [leftArr, rightArr],
+       step: ++stepCounter
+     });
    }
-   steps.push({type:'merge-done', description:`(Step ${++stepCounter}) Merged to [${l}..${r}]`, array: arr.slice(), highlight:{merge:[l,r]}, step: stepCounter});
+   
+   steps.push({
+     type:'merge-done', 
+     description:`Merge complete → [${arr.slice(l, r+1).join(',')}]`, 
+     array: arr.slice(), 
+     subArrays: [arr.slice(l, r+1)],
+     step: ++stepCounter
+   });
  }
+ 
  function rec(l,r){
-   steps.push({type:'split', description:`(Step ${++stepCounter}) Split [${l}..${r}]`, array: arr.slice(), step: stepCounter});
+   steps.push({
+     type:'split', 
+     description:`Split [${l}..${r}]`, 
+     array: arr.slice(), 
+     subArrays: [arr.slice(l, r+1)],
+     step: ++stepCounter
+   });
+   
    if(l>=r) return;
    const m = Math.floor((l+r)/2);
-   rec(l,m); rec(m+1,r); merge(l,m,r);
+   rec(l,m); 
+   rec(m+1,r); 
+   merge(l,m,r);
  }
+ 
  rec(0, arr.length-1);
 }
 
-/* ===== QUICK SORT (Median-of-Three Pivot, P & Q pointers) =====
-   - Pivot is chosen as median of first, middle, last elements
-   - Partitioning uses P & Q pointers (Hoare-style)
-   - Only pivot selection is optimized
-*/
-
+/* ===== QUICK SORT (Proper Median-of-Three) ===== */
 function quickSortTrace(arr) {
-
-  // -------- MEDIAN OF THREE PIVOT SELECTION --------
   function medianOfThree(l, r) {
-    const m = Math.floor((l + r) / 2);
-
-    if (arr[l] > arr[m]) [arr[l], arr[m]] = [arr[m], arr[l]];
-    if (arr[l] > arr[r]) [arr[l], arr[r]] = [arr[r], arr[l]];
-    if (arr[m] > arr[r]) [arr[m], arr[r]] = [arr[r], arr[m]];
-
-    return m; // index of median element
+    const center = Math.floor((l + r) / 2);
+    
+    steps.push({
+      type: 'pivot-selection',
+      description: `Median-of-three: comparing arr[${l}]=${arr[l]}, arr[${center}]=${arr[center]}, arr[${r}]=${arr[r]}`,
+      array: arr.slice(),
+      subArrays: [arr.slice(l, r+1)],
+      step: ++stepCounter
+    });
+    
+    // Sort left, center, right
+    if (arr[l] > arr[center]) {
+      [arr[l], arr[center]] = [arr[center], arr[l]];
+      steps.push({
+        type: 'pivot-sort',
+        description: `Swap arr[${l}] and arr[${center}]`,
+        array: arr.slice(),
+        subArrays: [arr.slice(l, r+1)],
+        step: ++stepCounter
+      });
+    }
+    
+    if (arr[l] > arr[r]) {
+      [arr[l], arr[r]] = [arr[r], arr[l]];
+      steps.push({
+        type: 'pivot-sort',
+        description: `Swap arr[${l}] and arr[${r}]`,
+        array: arr.slice(),
+        subArrays: [arr.slice(l, r+1)],
+        step: ++stepCounter
+      });
+    }
+    
+    if (arr[center] > arr[r]) {
+      [arr[center], arr[r]] = [arr[r], arr[center]];
+      steps.push({
+        type: 'pivot-sort',
+        description: `Swap arr[${center}] and arr[${r}]`,
+        array: arr.slice(),
+        subArrays: [arr.slice(l, r+1)],
+        step: ++stepCounter
+      });
+    }
+    
+    // Now arr[l] <= arr[center] <= arr[r]
+    // Move center (the median) to position right-1
+    [arr[center], arr[r-1]] = [arr[r-1], arr[center]];
+    
+    steps.push({
+      type: 'pivot',
+      description: `Pivot selected: ${arr[r-1]} (median placed at position ${r-1})`,
+      array: arr.slice(),
+      subArrays: [arr.slice(l, r+1)],
+      step: ++stepCounter
+    });
+    
+    return r - 1;
   }
 
   function partition(l, r) {
-
-    // ----- MEDIAN-OF-THREE PIVOT -----
-    const pivotIndex = medianOfThree(l, r);
-    const pivotValue = arr[pivotIndex];
-
-    // move pivot to left (algorithm expects pivot at l)
-    [arr[l], arr[pivotIndex]] = [arr[pivotIndex], arr[l]];
-
-    let P = l + 1;
-    let Q = r;
-
-    while (true) {
-
-      // Move P right while element <= pivot
-      while (P <= r && arr[P] <= arr[l]) {
-        steps.push({
-          type: 'moveP',
-          description: `(Step ${++stepCounter}) Move Pointer_1 (P) → ${P}`,
-          array: arr.slice(),
-          step: stepCounter
-        });
-        P++;
-      }
-
-      // Move Q left while element > pivot
-      while (Q >= l + 1 && arr[Q] > arr[l]) {
-        steps.push({
-          type: 'moveQ',
-          description: `(Step ${++stepCounter}) Move Pointer_2 (Q) ← ${Q}`,
-          array: arr.slice(),
-          step: stepCounter
-        });
-        Q--;
-      }
-
-      // Swap or place pivot
-      if (P < Q) {
-        [arr[P], arr[Q]] = [arr[Q], arr[P]];
+    // For small subarrays (< 3 elements), handle directly
+    if (r - l < 2) {
+      if (r - l === 1 && arr[l] > arr[r]) {
+        [arr[l], arr[r]] = [arr[r], arr[l]];
         steps.push({
           type: 'swap',
-          description: `(Step ${++stepCounter}) Swap indices ${P} and ${Q}`,
+          description: `Direct swap: arr[${l}] and arr[${r}]`,
           array: arr.slice(),
-          step: stepCounter
+          subArrays: [arr.slice(l, r+1)],
+          step: ++stepCounter
         });
-      } else {
-        // Place pivot at correct position
-        [arr[l], arr[Q]] = [arr[Q], arr[l]];
+      }
+      return l;
+    }
+    
+    const pivotIndex = medianOfThree(l, r);
+    const pivotValue = arr[pivotIndex];
+    
+    // Start partitioning from l+1 and r-2 (pivot at r-1, largest at r)
+    let i = l + 1;
+    let j = r - 2;
+    
+    while (true) {
+      // Move i right while elements are less than pivot
+      while (i <= j && arr[i] < pivotValue) {
         steps.push({
-          type: 'pivot-place',
-          description: `(Step ${++stepCounter}) Place pivot at index ${Q}`,
+          type: 'moveP',
+          description: `Move left pointer → i=${i} (arr[${i}]=${arr[i]} < pivot=${pivotValue})`,
           array: arr.slice(),
-          step: stepCounter
+          subArrays: [arr.slice(l, r+1)],
+          step: ++stepCounter
         });
-        return Q;
+        i++;
+      }
+      
+      // Move j left while elements are greater than pivot
+      while (i <= j && arr[j] > pivotValue) {
+        steps.push({
+          type: 'moveQ',
+          description: `Move right pointer ← j=${j} (arr[${j}]=${arr[j]} > pivot=${pivotValue})`,
+          array: arr.slice(),
+          subArrays: [arr.slice(l, r+1)],
+          step: ++stepCounter
+        });
+        j--;
+      }
+      
+      if (i < j) {
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+        steps.push({
+          type: 'swap',
+          description: `Swap arr[${i}]=${arr[j]} and arr[${j}]=${arr[i]}`,
+          array: arr.slice(),
+          subArrays: [arr.slice(l, r+1)],
+          step: ++stepCounter
+        });
+        i++;
+        j--;
+      } else {
+        break;
       }
     }
+    
+    // Place pivot in its final position
+    [arr[pivotIndex], arr[i]] = [arr[i], arr[pivotIndex]];
+    steps.push({
+      type: 'pivot-place',
+      description: `Place pivot ${pivotValue} at final position ${i}`,
+      array: arr.slice(),
+      subArrays: [arr.slice(l, r+1)],
+      step: ++stepCounter
+    });
+    
+    return i;
   }
 
   function rec(l, r) {
     steps.push({
       type: 'q-split',
-      description: `(Step ${++stepCounter}) QuickSort on range [${l}..${r}]`,
+      description: `QuickSort on range [${l}..${r}]: [${arr.slice(l, r+1).join(',')}]`,
       array: arr.slice(),
-      step: stepCounter
+      subArrays: [arr.slice(l, r+1)],
+      step: ++stepCounter
     });
 
     if (l >= r) return;
-
+    
     const p = partition(l, r);
     rec(l, p - 1);
     rec(p + 1, r);
@@ -317,59 +455,87 @@ function quickSortTrace(arr) {
   rec(0, arr.length - 1);
 }
 
-/* ===== showStep & logging behavior ===== */
+/* ===== showStep with improved visualization ===== */
 function showStep(i, appendToLog=true){
  if(!steps || i < 0 || i >= steps.length) return;
  const s = steps[i];
  stepIndex.textContent = i+1;
  stepTotal.textContent = steps.length;
 
- // render snapshot and highlights
- renderArrayBoxes(s.array || baseArray, s.highlight || {});
+ // Update current array
+ currentArrayEl.textContent = s.array ? '[' + s.array.join(', ') + ']' : '-';
 
- // append to log only when stepping forward (appendToLog true)
+ // Update sub-arrays
+ subArraysEl.innerHTML = '';
+ if (s.subArrays && s.subArrays.length > 0) {
+   s.subArrays.forEach(subArr => {
+     const div = document.createElement('div');
+     div.className = 'subarray-box';
+     div.textContent = '[' + subArr.join(', ') + ']';
+     subArraysEl.appendChild(div);
+   });
+ }
+
+ // Append to log only when stepping forward
  if(appendToLog){
    const entry = document.createElement('div');
    entry.className = 'logEntry';
-   // color by type
-   if(s.type === 'compare' || s.type === 'moveP' || s.type==='moveQ') entry.classList.add('log-compare');
-   else if(s.type === 'swap') entry.classList.add('log-swap');
-   else if(s.type === 'pivot' || s.type === 'pivot-place') entry.classList.add('log-pivot');
-   else if(s.type && s.type.startsWith('merge')) entry.classList.add('log-merge');
-   else if(s.type === 'done') entry.classList.add('log-done');
+   
+   // Color by type
+   if(s.type === 'compare' || s.type === 'moveP' || s.type==='moveQ') {
+     entry.classList.add('log-compare');
+   } else if(s.type === 'swap') {
+     entry.classList.add('log-swap');
+   } else if(s.type === 'pivot' || s.type === 'pivot-place' || s.type === 'pivot-selection' || s.type === 'pivot-sort') {
+     entry.classList.add('log-pivot');
+   } else if(s.type && (s.type.startsWith('merge') || s.type === 'place')) {
+     entry.classList.add('log-merge');
+   } else if(s.type === 'done') {
+     entry.classList.add('log-done');
+   } else if(s.type === 'split' || s.type === 'q-split') {
+     entry.classList.add('log-split');
+   }
 
-   // human-friendly description (already stored in description)
-   entry.innerHTML = `<strong>${escapeHtml(s.description)}</strong><div style="font-size:12px;color:#444;margin-top:6px">Array: ${s.array ? '['+s.array.join(', ')+']' : '-'}</div>`;
+   entry.textContent = `(Step ${s.step}) ${s.description}`;
    entry.dataset.stepIndex = i;
    logContainer.appendChild(entry);
    logContainer.scrollTop = logContainer.scrollHeight;
-   highlightLogEntry(i);
- } else {
-   highlightLogEntry(i);
  }
 
- // final stage: show final array
+ // Final stage: show final array
  if(s.type === 'done'){
    renderFinal(s.array || []);
  }
 }
 
-function highlightLogEntry(index){
- Array.from(logContainer.querySelectorAll('.logEntry')).forEach(e=> e.classList.remove('log-highlight'));
- const el = logContainer.querySelector(`.logEntry[data-step-index="${index}"]`);
- if(el) el.classList.add('log-highlight');
+function removeLastLogEntry() {
+  const entries = logContainer.querySelectorAll('.logEntry');
+  if (entries.length > 0) {
+    logContainer.removeChild(entries[entries.length - 1]);
+  }
 }
 
 function resetAll(){
+  // Stop auto run if active
+  if (autoRunInterval) {
+    clearInterval(autoRunInterval);
+    autoRunInterval = null;
+    autoRunBtn.textContent = '▶️ Auto';
+    autoRunBtn.classList.remove('danger');
+    autoRunBtn.classList.add('primary');
+  }
+
   // reset data
   baseArray = [];
+  originalArray = [];
   steps = [];
   curStep = -1;
-  visitedMax = -1;
   stepCounter = 0;
 
   // reset visuals
-  visual.innerHTML = '';
+  originalArrayEl.textContent = '-';
+  currentArrayEl.textContent = '-';
+  subArraysEl.innerHTML = '';
   finalVisual.innerHTML = '(Sorted array will appear here)';
   logContainer.innerHTML = '';
 
@@ -396,31 +562,32 @@ function setFacts(){
   }
 
   if (algoSelect.value === 'quick') {
-    factsText.innerHTML = `
-      <strong>Quick Sort (Median-of-Three Pivot Selection):</strong>
-      <ul style="margin:8px 0; padding-left: 10px;">
-        <li>The pivot is chosen as the <strong>median of the first, middle, and last </strong>elements.</li>
-        <li>This strategy reduces the probability of worst-case behavior for sorted or reverse-sorted inputs.</li>
-        <li>Partitioning is performed using two inward-moving pointers (P and Q).</li>
-        <li>Elements less than or equal to the pivot are placed to the left; greater elements to the right.</li>
-        <li>Average time complexity: <strong>O(n log n)</strong>.</li>
-        <li>Worst-case time complexity: <strong>O(n²)</strong>, occurs when maximum (or minimum) element is chosen as the pivot.</li>
-        <li>The algorithm is in-place and requires no additional auxiliary memory.</li>
-      </ul>
-    `;
-  } 
-  else if (algoSelect.value === 'merge') {
-    factsText.innerHTML = `
-      <strong>Merge Sort:</strong>
-      <ul style="margin:8px 0; padding-left: 10px;">
-        <li>Merge Sort divides the array deterministically into equal halves.</li>
-        <li>Each subarray is sorted and merged to produce the final sorted array.</li>
-        <li>Time complexity is consistently <strong>O(n log n)</strong> for all cases.</li>
-        <li>Requires additional memory proportional to the array size.</li>
-        <li>Merge Sort is a stable sorting algorithm.</li>
-      </ul>
-    `;
-  }
+  factsText.innerHTML = `
+    <strong>Quick Sort (Median-of-Three Pivot):</strong>
+    <ul style="margin:8px 0; padding-left: 20px;">
+      <li><strong>Pivot Selection:</strong> Median of three elements: first, middle, and last.</li>
+      <li><strong>Arrange Three Elements:</strong> These three elements are arranged so that left ≤ middle ≤ right.</li>
+      <li><strong>Pivot Placement:</strong> The median is moved to position right-1 and used as the pivot.</li>
+      <li><strong>Partitioning:</strong> Two pointers move inward, swapping elements that are on the wrong side of the pivot.</li>
+      <li><strong>Final Pivot Position:</strong> The pivot is placed in its correct sorted position.</li>
+      <li><strong>Time Complexity:</strong> Average O(n log n), Worst O(n²) (when maximum (or minimum) element is chosen as the pivot).</li>
+      <li><strong>Space Complexity:</strong> O(log n) due to recursion (in-place sorting).</li>
+    </ul>
+  `;
+} 
+else if (algoSelect.value === 'merge') {
+  factsText.innerHTML = `
+    <strong>Merge Sort:</strong>
+    <ul style="margin:8px 0; padding-left: 20px;">
+      <li><strong>Divide:</strong> The array is recursively divided into two equal halves until each subarray has one element.</li>
+      <li><strong>Conquer:</strong> Single-element subarrays are already sorted.</li>
+      <li><strong>Merge:</strong> Sorted subarrays are merged by comparing elements from each half.</li>
+      <li><strong>Stability:</strong> Merge Sort preserves the order of equal elements.</li>
+      <li><strong>Time Complexity:</strong> O(n log n) in all cases.</li>
+      <li><strong>Space Complexity:</strong> O(n) due to extra temporary arrays.</li>
+      <li><strong>Predictability:</strong> Performance remains the same for all input types.</li>
+    </ul>
+  `;
 }
 
-
+}

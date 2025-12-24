@@ -33,7 +33,7 @@
  type="range"
  id="nRange"
  min="0"
- max="20"
+ max="25"
  value="0"
 />
 
@@ -46,7 +46,7 @@
 
      <div class="bottom-actions">
       <button id="runBtn" class="btn primary run-btn">
-        Run Simulation
+        Generate Array
       </button>
       <button id="resetBtn" class="btn danger run-btn">
         Reset
@@ -59,25 +59,38 @@
    <section class="panel center">
      <h2>Array Visualization</h2>
 
-     <div id="visualScroller" class="visualScroller">
-       <div id="visual" class="arrayVisual"></div>
-  
+    <!-- Original Array -->
+     <div class="originalArrayBox">
+       <h3>Original Array:</h3>
+       <div id="originalArray" class="arrayDisplay">-</div>
      </div>
 
-     <div id="selectedAlgo" class="selectedAlgo">Selected: <em id="selAlgoText">-</em></div>
+     <!-- Current State -->
+     <div class="currentStateBox">
+       <h3>Current Array:</h3>
+       <div id="currentArray" class="currentArray">-</div>
+       
+       <div class="subArraysContainer">
+         <h4>Sub-Arrays:</h4>
+         <div id="subArrays" class="subArrayBoxes"></div>
+       </div>
+     </div>
+
+     <div class="selectedAlgo">Selected: <em id="selAlgoText">-</em></div>
 
      <div class="step-controls">
-       <button id="prevStep" class="btn">Previous</button>
-       <button id="nextStep" class="btn primary">Next</button>
+       <button id="prevStep" class="btn">⬅️ Previous</button>
+       <button id="autoRun" class="btn primary">▶️ Auto Run</button>
+       <button id="nextStep" class="btn primary">Next ➡️</button>
        <span class="stepInfo">Step <span id="stepIndex">0</span> / <span id="stepTotal">0</span></span>
      </div>
 
      <div class="stepLog">
-       <h3>Step Log (each step appended)</h3>
+       <h3>Step Log:</h3>
        <div id="logContainer" class="logBox"></div>
      </div>
    </section>
-
+   
    <!-- RIGHT: Final array, facts -->
    <section class="panel right">
      <h2>Result & Analysis</h2>
