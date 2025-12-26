@@ -207,7 +207,7 @@ function mergeSortTrace(arr){
    
    steps.push({
      type:'merge-start', 
-     description:`Split → [${leftArr.join(',')}] | [${rightArr.join(',')}]`, 
+     description:`Split subarray → [${leftArr.join(',')}] | [${rightArr.join(',')}]`, 
      array: arr.slice(), 
      subArrays: [leftArr, rightArr],
      step: ++stepCounter
@@ -229,7 +229,7 @@ function mergeSortTrace(arr){
        arr[k] = left[i++];
        steps.push({
          type:'place', 
-         description:`Place ${arr[k]} at index ${k} from left`, 
+         description:`Place ${arr[k]} at index ${k} `, 
          array: arr.slice(), 
          subArrays: [leftArr, rightArr],
          step: ++stepCounter
@@ -238,7 +238,7 @@ function mergeSortTrace(arr){
        arr[k] = right[j++];
        steps.push({
          type:'place', 
-         description:`Place ${arr[k]} at index ${k} from right`, 
+         description:`Place ${arr[k]} at index ${k}`, 
          array: arr.slice(), 
          subArrays: [leftArr, rightArr],
          step: ++stepCounter
@@ -281,7 +281,7 @@ function mergeSortTrace(arr){
  function rec(l,r){
    steps.push({
      type:'split', 
-     description:`Split [${l}..${r}]`, 
+     description:`Split subarray[${l}..${r}]`, 
      array: arr.slice(), 
      subArrays: [arr.slice(l, r+1)],
      step: ++stepCounter
@@ -304,8 +304,7 @@ function quickSortTrace(arr) {
     
     steps.push({
       type: 'pivot-selection',
-      description: `Median-of-three: comparing arr[${l}]=${arr[l]}, arr[${center}]=${arr[center]}, arr[${r}]=${arr[r]}`,
-      array: arr.slice(),
+      description: `Median-of-three: Comparing arr[${l}]=${arr[l]}, arr[${center}]=${arr[center]}, arr[${r}]=${arr[r]} and ensure arr[left] ≤ arr[center] ≤ arr[right] ,then middle value becomes the pivot` ,
       subArrays: [arr.slice(l, r+1)],
       step: ++stepCounter
     });
@@ -350,7 +349,7 @@ function quickSortTrace(arr) {
     
     steps.push({
       type: 'pivot',
-      description: `Pivot selected: ${arr[r-1]} (median placed at position ${r-1})`,
+      description: `Pivot selected: ${arr[r-1]} (median placed at position ${r-1})[Since selected pivot is moved to position right-1 ]`,
       array: arr.slice(),
       subArrays: [arr.slice(l, r+1)],
       step: ++stepCounter
@@ -439,7 +438,7 @@ function quickSortTrace(arr) {
   function rec(l, r) {
     steps.push({
       type: 'q-split',
-      description: `QuickSort on range [${l}..${r}]: [${arr.slice(l, r+1).join(',')}]`,
+      description: `QuickSort on index range [${l}..${r}]: [${arr.slice(l, r+1).join(',')}]`,
       array: arr.slice(),
       subArrays: [arr.slice(l, r+1)],
       step: ++stepCounter
