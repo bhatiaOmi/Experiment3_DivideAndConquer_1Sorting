@@ -11,7 +11,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 40px 52px 26px;
+  padding: 24px 40px 16px;
   box-sizing: border-box;
   max-width: 1400px;
   margin: 0 auto;
@@ -75,7 +75,7 @@ header h1 {
  display: grid;
  grid-template-columns: 280px 1fr 300px;  
  gap: 15px;
- padding: 18px 50px 9px;              
+ padding: 6px 40px 6px;              
  box-sizing: border-box;
  height: calc(100vh - 120px);
 }
@@ -179,7 +179,7 @@ header h1 {
 /* CENTER PANEL - NEW DESIGN */
 .center {
   
-  max-height: calc(100vh - 120px);
+  min-height: calc(100vh - 120px);
 }
 
 /* Original Array Display */
@@ -312,7 +312,7 @@ header h1 {
 /* Step Log with Color Coding - Fixed height with scrollbar */
 
 .stepLog {
-  margin-top: 15px;
+  margin-top: 2px;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -321,8 +321,8 @@ header h1 {
 
 .logBox {
  width: 100%;
- height: 300px;         
- max-height: 300px;
+ height: 400px;         
+ max-height: 350px;
  overflow-y: auto;
  overflow-x: hidden;
  padding: 8px;
@@ -334,7 +334,7 @@ header h1 {
 .logEntry {
   padding: 8px 10px;
   border-radius: 6px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   font-size: 13px;
   background: #fff;
   border-left: 4px solid transparent;
@@ -414,17 +414,51 @@ header h1 {
 }
 
 
+/* Keep responsiveness for small screens */
+@media (max-width: 1000px) {
 
-@media (max-width: 768px) {
-  body {
-    overflow-x: hidden;
+  #container {
+    padding: 20px;
   }
 
   .layout {
     grid-template-columns: 1fr;
     height: auto;
   }
+
+  .panel {
+    height: auto;
+  }
 }
+
+
+/* Reduce height issues for short viewports */
+@media (max-height: 900px) {
+
+  header h1 {
+    font-size: 16px;
+  }
+
+  #container {
+    padding: 16px;
+  }
+
+  .panel {
+    max-height: calc(100vh - 80px);
+  }
+}
+
+
+/* Large screens */
+@media (min-width: 1400px) {
+
+  #container {
+    max-width: 1400px;
+  }
+}
+
+
+
 
 
 
