@@ -1,4 +1,4 @@
-// script.js - Enhanced with proper median-of-three QuickSort
+// script.js 
 const algoSelect = document.getElementById('algoSelect');
 const arrayType = document.getElementById('arrayType');
 
@@ -21,6 +21,21 @@ const logContainer = document.getElementById('logContainer');
 const factsText = document.getElementById('factsText');
 const nRange = document.getElementById('nRange');
 const nValue = document.getElementById('nValue');
+const speedMenu = document.getElementById('speedMenu');
+const speedButtons = speedMenu.querySelectorAll('button');
+const advancedAnalysisBox = document.getElementById('advancedAnalysisBox');
+const advancedBtn = document.getElementById('advancedBtn');
+
+// Modal elements
+const overlay = document.getElementById('graphOverlay');
+const modal = document.getElementById('graphModal');
+const closeBtn = document.getElementById('closeGraphBtn');
+const inputSizeDropdown = document.getElementById('inputSizeDropdown');
+const canvas = document.getElementById('scalabilityCanvas');
+const graphMessage = document.getElementById('graphMessage');
+
+let autoRunSpeed = null;
+let comparisonCount = 0;
 
 // Neutral defaults on load
 algoSelect.value = "";
@@ -86,7 +101,7 @@ runBtn.addEventListener('click', () => {
  const t = arrayType.value;
 
  if (n <= 0) {
-   alert("Please choose N > 0");
+   alert("Please select a value greater than 0 for N.");
    return;
  }
 
@@ -113,8 +128,11 @@ runBtn.addEventListener('click', () => {
  steps = [];
  curStep = -1;
  stepCounter = 0;
+ comparisonCount = 0;
  stepIndex.textContent = 0;
  stepTotal.textContent = 0;
+
+ advancedAnalysisBox.classList.add('hidden');
 
  prepareSteps(); 
 });
@@ -137,42 +155,58 @@ nextStep.addEventListener('click', ()=>{
 // Auto Run functionality
 autoRunBtn.addEventListener('click', () => {
   if (autoRunInterval) {
-    // Stop auto run
-    clearInterval(autoRunInterval);
-    autoRunInterval = null;
-    autoRunBtn.textContent = '▶️ Auto';
-    autoRunBtn.classList.remove('danger');
-    autoRunBtn.classList.add('primary');
-  } else {
-    // Start auto run
-    if (steps.length === 0) {
-      alert("Please generate an array first");
+    stopAutoRun();
+    return;
+  }
+
+  speedMenu.classList.toggle('hidden');
+});
+
+// Speed selection
+speedButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    autoRunSpeed = Number(btn.dataset.speed);
+    speedMenu.classList.add('hidden');
+
+    if (!steps || steps.length === 0) {
+      alert("Please generate the array before proceeding.");
       return;
     }
-    autoRunBtn.textContent = '⏸️ Pause';
-    autoRunBtn.classList.remove('primary');
-    autoRunBtn.classList.add('danger');
-    
-    autoRunInterval = setInterval(() => {
-      if (curStep < steps.length - 1) {
-        curStep++;
-        showStep(curStep, true);
-      } else {
-        clearInterval(autoRunInterval);
-        autoRunInterval = null;
-        autoRunBtn.textContent = '▶️ Auto';
-        autoRunBtn.classList.remove('danger');
-        autoRunBtn.classList.add('primary');
-      }
-    }, 800); // 800ms delay between steps
-  }
+
+    startAutoRun();
+  });
 });
+
+function startAutoRun() {
+  autoRunBtn.textContent = '⏸️ Pause';
+  autoRunBtn.classList.remove('primary');
+  autoRunBtn.classList.add('danger');
+
+  autoRunInterval = setInterval(() => {
+    if (curStep < steps.length - 1) {
+      curStep++;
+      showStep(curStep, true);
+    } else {
+      stopAutoRun();
+    }
+  }, autoRunSpeed);
+}
+
+function stopAutoRun() {
+  clearInterval(autoRunInterval);
+  autoRunInterval = null;
+
+  autoRunBtn.textContent = '▶️ Auto Run';
+  autoRunBtn.classList.remove('danger');
+  autoRunBtn.classList.add('primary');
+}
 
 // Prepare steps using exact algorithms
 function prepareSteps(){
   steps = []; 
   curStep = -1; 
   stepCounter = 0;
+  comparisonCount = 0;
 
   const arr = baseArray.slice();
 
@@ -184,7 +218,7 @@ function prepareSteps(){
 
   steps.push({
     type:'done',
-    description: '✓ Algorithm finished. Final sorted array.',
+    description: '✓ Algorithm performed successfully. Final sorted array',
     array: arr.slice(),
     subArrays: [],
     step: ++stepCounter
@@ -217,6 +251,7 @@ function mergeSortTrace(arr){
    let i=0,j=0,k=l;
    
    while(i<left.length && j<right.length){
+     comparisonCount++;
      steps.push({
        type:'compare', 
        description:`Compare ${left[i]} and ${right[j]}`, 
@@ -305,6 +340,7 @@ function quickSortTrace(arr) {
     steps.push({
       type: 'pivot-selection',
       description: `Median-of-three: Comparing arr[${l}]=${arr[l]}, arr[${center}]=${arr[center]}, arr[${r}]=${arr[r]} and ensure arr[left] ≤ arr[center] ≤ arr[right] ,then middle value becomes the pivot` ,
+      array: arr.slice(),
       subArrays: [arr.slice(l, r+1)],
       step: ++stepCounter
     });
@@ -384,6 +420,7 @@ function quickSortTrace(arr) {
     while (true) {
       // Move i right while elements are less than pivot
       while (i <= j && arr[i] < pivotValue) {
+        comparisonCount++;
         steps.push({
           type: 'moveP',
           description: `Move left pointer → i=${i} (arr[${i}]=${arr[i]} < pivot=${pivotValue})`,
@@ -396,6 +433,7 @@ function quickSortTrace(arr) {
       
       // Move j left while elements are greater than pivot
       while (i <= j && arr[j] > pivotValue) {
+        comparisonCount++;
         steps.push({
           type: 'moveQ',
           description: `Move right pointer ← j=${j} (arr[${j}]=${arr[j]} > pivot=${pivotValue})`,
@@ -438,7 +476,7 @@ function quickSortTrace(arr) {
   function rec(l, r) {
     steps.push({
       type: 'q-split',
-      description: `QuickSort on index range [${l}..${r}]: [${arr.slice(l, r+1).join(',')}]`,
+      description: `Performing quickSort on index range [${l}..${r}]: [${arr.slice(l, r+1).join(',')}]`,
       array: arr.slice(),
       subArrays: [arr.slice(l, r+1)],
       step: ++stepCounter
@@ -501,9 +539,11 @@ function showStep(i, appendToLog=true){
    logContainer.scrollTop = logContainer.scrollHeight;
  }
 
- // Final stage: show final array
+ // Final stage: show final array and button
  if(s.type === 'done'){
    renderFinal(s.array || []);
+   advancedAnalysisBox.classList.remove('hidden');
+   setFacts();
  }
 }
 
@@ -519,10 +559,13 @@ function resetAll(){
   if (autoRunInterval) {
     clearInterval(autoRunInterval);
     autoRunInterval = null;
-    autoRunBtn.textContent = '▶️ Auto';
+    autoRunBtn.textContent = '▶️ Auto Run';
     autoRunBtn.classList.remove('danger');
     autoRunBtn.classList.add('primary');
   }
+
+  speedMenu.classList.add('hidden');
+  autoRunSpeed = null;
 
   // reset data
   baseArray = [];
@@ -530,12 +573,13 @@ function resetAll(){
   steps = [];
   curStep = -1;
   stepCounter = 0;
+  comparisonCount = 0;
 
   // reset visuals
   originalArrayEl.textContent = '-';
   currentArrayEl.textContent = '-';
   subArraysEl.innerHTML = '';
-  finalVisual.innerHTML = '(Sorted array will appear here)';
+  finalVisual.innerHTML = '(Final sorted array will display here)';
   logContainer.innerHTML = '';
 
   // reset step counters
@@ -550,6 +594,9 @@ function resetAll(){
   algoSelect.value = "";
   selAlgoText.textContent = "-";
 
+  // hide advanced button
+  advancedAnalysisBox.classList.add('hidden');
+
   // reset facts
   factsText.textContent = 'Select an algorithm to view facts and analysis.';
 }
@@ -560,33 +607,340 @@ function setFacts(){
     return;
   }
 
+  const comparisonText = curStep === steps.length - 1 
+    ? comparisonCount 
+    : 'Available after completion';
+
   if (algoSelect.value === 'quick') {
   factsText.innerHTML = `
     <strong>Quick Sort (Median-of-Three Pivot):</strong>
-    <ul style="margin:8px 0; padding-left: 20px;">
-      <li><strong>Pivot Selection:</strong> Median of three elements: first, middle, and last.</li>
-      <li><strong>Arrange Three Elements:</strong> These three elements are arranged so that left ≤ middle ≤ right.</li>
-      <li><strong>Pivot Placement:</strong> The median is moved to position right-1 and used as the pivot.</li>
-      <li><strong>Partitioning:</strong> Two pointers move inward, swapping elements that are on the wrong side of the pivot.</li>
-      <li><strong>Final Pivot Position:</strong> The pivot is placed in its correct sorted position.</li>
+    <ul style="margin:8px 0; padding-left: 20px;">   
       <li><strong>Time Complexity:</strong> Average O(n log n), Worst O(n²) (when maximum (or minimum) element is chosen as the pivot).</li>
       <li><strong>Space Complexity:</strong> O(log n) due to recursion (in-place sorting).</li>
+      <li><strong>Stability:</strong> Not stable (does not preserve the relative order of equal elements).</li>
+      <li><strong>Total Comparisons:</strong> ${comparisonText}</li>
     </ul>
   `;
 } 
 else if (algoSelect.value === 'merge') {
   factsText.innerHTML = `
     <strong>Merge Sort:</strong>
-    <ul style="margin:8px 0; padding-left: 20px;">
-      <li><strong>Divide:</strong> The array is recursively divided into two equal halves until each subarray has one element.</li>
-      <li><strong>Conquer:</strong> Single-element subarrays are already sorted.</li>
-      <li><strong>Merge:</strong> Sorted subarrays are merged by comparing elements from each half.</li>
-      <li><strong>Stability:</strong> Merge Sort preserves the order of equal elements.</li>
+    <ul style="margin:8px 0; padding-left: 20px;">     
       <li><strong>Time Complexity:</strong> O(n log n) in all cases.</li>
       <li><strong>Space Complexity:</strong> O(n) due to extra temporary arrays.</li>
-      <li><strong>Predictability:</strong> Performance remains the same for all input types.</li>
+      <li><strong>Stability:</strong> Stable (preserves the relative order of equal elements).</li>
+      <li><strong>Total Comparisons:</strong> ${comparisonText}</li>
     </ul>
   `;
 }
+}
 
+// ========== GRAPH FUNCTIONALITY ==========
+
+// Modal functions
+advancedBtn.addEventListener('click', () => {
+  openGraphModal();
+});
+
+closeBtn.addEventListener('click', closeGraphModal);
+overlay.addEventListener('click', closeGraphModal);
+
+inputSizeDropdown.addEventListener('change', () => {
+  drawScalabilityGraph();
+});
+
+function openGraphModal() {
+  // Check if algorithm is selected
+  if (!algoSelect.value) {
+    graphMessage.textContent = 'Please select an algorithm from Panel 1 first.';
+    graphMessage.classList.remove('hidden');
+    canvas.style.display = 'none';
+  } else {
+    graphMessage.classList.add('hidden');
+    canvas.style.display = 'block';
+    
+    // Reset dropdown to default (no selection)
+    inputSizeDropdown.value = '';
+    
+    // Clear canvas
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  
+  overlay.classList.remove('hidden');
+  modal.classList.remove('hidden');
+  document.body.classList.add('modal-open');
+}
+
+function closeGraphModal() {
+  overlay.classList.add('hidden');
+  modal.classList.add('hidden');
+  document.body.classList.remove('modal-open');
+  
+  // Reset dropdown
+  inputSizeDropdown.value = '';
+  
+  // Clear canvas
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// Lightweight sorting functions for performance measurement
+function mergeSortSimple(arr) {
+  if (arr.length <= 1) return arr;
+  const mid = Math.floor(arr.length / 2);
+  const left = mergeSortSimple(arr.slice(0, mid));
+  const right = mergeSortSimple(arr.slice(mid));
+  return mergeSimple(left, right);
+}
+
+function mergeSimple(left, right) {
+  const res = [];
+  let i = 0, j = 0;
+  while (i < left.length && j < right.length) {
+    if (left[i] <= right[j]) res.push(left[i++]);
+    else res.push(right[j++]);
+  }
+  return res.concat(left.slice(i)).concat(right.slice(j));
+}
+
+function quickSortSimple(arr, l, r) {
+  if (l >= r) return;
+  const pivotIndex = Math.floor((l + r) / 2);
+  const pivot = arr[pivotIndex];
+  let i = l, j = r;
+  while (i <= j) {
+    while (arr[i] < pivot) i++;
+    while (arr[j] > pivot) j--;
+    if (i <= j) {
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      i++; j--;
+    }
+  }
+  quickSortSimple(arr, l, j);
+  quickSortSimple(arr, i, r);
+}
+
+function measureExecutionTime(n) {
+  let testArr;
+  if (arrayType.value === 'random') {
+    testArr = Array.from({length: n}, () => Math.floor(Math.random() * 99) + 1);
+  } else if (arrayType.value === 'asc') {
+    testArr = Array.from({length: n}, (_, i) => i + 1);
+  } else {
+    testArr = Array.from({length: n}, (_, i) => n - i);
+  }
+
+  const arr = [...testArr];
+    
+  const RUNS = 20;   
+  let total = 0;
+
+  for (let i = 0; i < RUNS; i++) {
+    const temp = [...arr];
+    const start = performance.now();
+
+    if (algoSelect.value === 'merge') {
+      mergeSortSimple(temp);
+    } else {
+      quickSortSimple(temp, 0, temp.length - 1);
+    }
+
+    total += performance.now() - start;
+  }
+
+  return total / RUNS;
+}
+
+function drawScalabilityGraph() {
+  if (!algoSelect.value) {
+    graphMessage.textContent = 'Please select an algorithm from Panel 1 first.';
+    graphMessage.classList.remove('hidden');
+    canvas.style.display = 'none';
+    return;
+  }
+
+  if (!inputSizeDropdown.value) {
+    graphMessage.textContent = 'Please select an N value from the dropdown above.';
+    graphMessage.classList.remove('hidden');
+    canvas.style.display = 'none';
+    return;
+  }
+
+  graphMessage.classList.add('hidden');
+  canvas.style.display = 'block';
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const maxN = Number(inputSizeDropdown.value);
+
+  // Generate 10 evenly-spaced intervals from 0 to maxN
+  const step = maxN / 10;
+  const nValues = [];
+  for (let i = 1; i <= 10; i++) {
+    nValues.push(Math.round(i * step));
+  }
+
+  const timeValues = [];
+  let prevTime = 0;
+
+  nValues.forEach(n => {
+    let t = measureExecutionTime(n);
+
+    //  force monotonic increase (visual correctness)
+    if (t < prevTime) {
+      t = prevTime + 0.001;
+    }
+
+    prevTime = t;
+    timeValues.push(t);
+});
+
+
+  const leftMargin = 80;
+  const rightMargin = 40;
+  const topMargin = 70;
+  const bottomMargin = 60;
+
+  const w = canvas.width - leftMargin - rightMargin;
+  const h = canvas.height - topMargin - bottomMargin;
+
+  const maxTime = Math.max(...timeValues) * 1.1;
+
+  // Title
+  ctx.fillStyle = '#1e293b';
+  ctx.font = 'bold 18px Arial';
+  ctx.textAlign = 'center';
+  const algoName = algoSelect.value === 'merge' ? 'Merge Sort' : 'Quick Sort';
+  ctx.fillText(`${algoName} - Input Size vs Execution Time`, canvas.width / 2, 30);
+
+  // Axes
+  ctx.beginPath();
+  ctx.moveTo(leftMargin, topMargin);
+  ctx.lineTo(leftMargin, canvas.height - bottomMargin);
+  ctx.lineTo(canvas.width - rightMargin, canvas.height - bottomMargin);
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Grid lines
+  const numYTicks = 5;
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= numYTicks; i++) {
+    const y = canvas.height - bottomMargin - (h * i) / numYTicks;
+    ctx.beginPath();
+    ctx.moveTo(leftMargin, y);
+    ctx.lineTo(canvas.width - rightMargin, y);
+    ctx.stroke();
+  }
+
+  // Line graph
+  ctx.strokeStyle = '#ee2f2fff';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  
+  timeValues.forEach((t, i) => {
+    const x = leftMargin + (w * (i + 1)) / (nValues.length + 1);
+    const y = canvas.height - bottomMargin - (t / maxTime) * h;
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  });
+  ctx.stroke();
+
+  // Points
+  ctx.fillStyle = '#ef4444';
+  timeValues.forEach((t, i) => {
+    const x = leftMargin + (w * (i + 1)) / (nValues.length + 1);
+    const y = canvas.height - bottomMargin - (t / maxTime) * h;
+    ctx.beginPath();
+    ctx.arc(x, y, 6, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Circle outline
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+
+  // X-axis ticks and labels
+  ctx.fillStyle = '#080a0eff';
+  ctx.font = '12px Arial';
+  ctx.textAlign = 'center';
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 2;
+
+  nValues.forEach((n, i) => {
+    const x = leftMargin + (w * (i + 1)) / (nValues.length + 1);
+    const y = canvas.height - bottomMargin;
+    
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y + 6);
+    ctx.stroke();
+    
+    ctx.fillText(n.toString(), x, y + 25);
+  });
+
+      // Y-axis ticks and labels
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+
+    for (let i = 0; i <= numYTicks; i++) {
+      const y = canvas.height - bottomMargin - (h * i) / numYTicks;
+      const value = (maxTime * i / numYTicks).toFixed(2);
+
+      ctx.strokeStyle = '#0c0f15ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(leftMargin - 6, y);
+      ctx.lineTo(leftMargin, y);
+      ctx.stroke();
+
+      ctx.fillText(value, leftMargin - 10, y);
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#060709ff';
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center';
+
+    // X-axis label
+    ctx.fillText(
+      'Input Size (n)',
+      leftMargin + w / 2,
+      canvas.height - 20
+    );
+
+    // Y-axis label (rotated)
+    ctx.save();
+    ctx.translate(25, topMargin + h / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Execution Time (ms)', 0, 0);
+    ctx.restore();
+  
+
+    if (algoSelect.value === 'quick') {
+      graphMessage.innerHTML = `
+        <hr style="margin:16px 0;">
+        <strong>
+        Quick Sort shows an overall increase in execution time as input size grows.
+        The trend follows average-case O(n log n) behavior, with minor variations
+        due to pivot selection.</strong>
+      `;
+      graphMessage.classList.remove('hidden');
+      }
+    else if (algoSelect.value === 'merge') {
+      graphMessage.innerHTML = `
+        <hr style="margin:16px 0;">
+        <strong>
+        Merge Sort exhibits a consistent increase in execution time with input size.
+        Its predictable O(n log n) growth results from uniform divide-and-merge steps.</strong>
+      `;
+      graphMessage.classList.remove('hidden');
+  }
 }

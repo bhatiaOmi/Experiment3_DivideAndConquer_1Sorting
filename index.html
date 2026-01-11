@@ -80,7 +80,14 @@
 
      <div class="step-controls">
        <button id="prevStep" class="btn">⬅️ Previous</button>
-       <button id="autoRun" class="btn primary">▶️ Auto Run</button>
+       <div class="autoRun-wrapper">
+         <button id="autoRun" class="btn primary">▶️ Auto Run</button>
+         <div id="speedMenu" class="speed-menu hidden">
+           <button data-speed="1500">Slow</button>
+           <button data-speed="800">Normal</button>
+           <button data-speed="200">Fast</button>
+         </div>
+       </div>
        <button id="nextStep" class="btn ">Next ➡️</button>
        <span class="stepInfo">Step <span id="stepIndex">0</span> / <span id="stepTotal">0</span></span>
      </div>
@@ -103,11 +110,40 @@
      <div class="facts">
        <h3>Facts & Analysis</h3>
        <div id="factsText">Choose algorithm and run to see facts relevant to the run.</div>
+       
+       <div id="advancedAnalysisBox" class="hidden">
+         <button id="advancedBtn" class="scalability-btn">
+            Scalability Graph
+         </button>
+       </div>
      </div>
    </section>
  </main>
 
+ <!-- Scalability Graph Modal -->
+ <div id="graphOverlay" class="overlay hidden"></div>
+ <div id="graphModal" class="graph-modal hidden">
+   <div class="graph-header">
+     <h3>Scalability Analysis: Input Size vs Time</h3>
+     <button id="closeGraphBtn">✖</button>
+   </div>
+   
+   <div class="modal-controls">
+     <label for="inputSizeDropdown">Select N value:</label>
+     <select id="inputSizeDropdown">
+       <option value="" disabled selected hidden>-- Max value of N --</option>
+       <option value="1000">1000</option>
+       <option value="1500">1500</option>
+       <option value="2000">2000</option>
+       <option value="2500">2500</option>
+       <option value="3000">3000</option>
+     </select>
+   </div>
+   
+   <canvas id="scalabilityCanvas" width="700" height="380"></canvas>
+   <div id="graphMessage" class="graph-message hidden"></div>
+ </div>
+
  <script src="script.js"></script>
 </body>
 </html>
-

@@ -16,7 +16,6 @@
   max-width: 1400px;
   margin: 0 auto;
   overflow: hidden;
-
 }
 
 /* ROOT VARIABLES */
@@ -34,7 +33,6 @@
  --log-split: #3b82f6;
 }
 
-
 /* BODY & RESET */
 
 html, body {
@@ -47,13 +45,20 @@ body {
     font-size: 13px;
 }
 
-
 body.with-bg {
     background: url("./images/background.jpg") no-repeat center center fixed;
-    background-size: cover; /* preserve aspect ratio and fill screen */
+    background-size: cover;
 }
 
+/* Blur background when modal is open */
+body.modal-open .layout {
+  filter: blur(4px);
+  pointer-events: none;
+}
 
+body.modal-open header {
+  filter: blur(4px);
+}
 
 /* HEADER */
 
@@ -67,7 +72,6 @@ header h1 {
  font-size: 18px;
  font-weight: 700;
 }
-
 
 /* 3-COLUMN LAYOUT (PANELS) */
 
@@ -92,6 +96,7 @@ header h1 {
  display: flex;
  flex-direction: column;
 }
+
 .panel h2 {
  font-size: 16px;
  margin: 0 0 12px 0;
@@ -99,9 +104,7 @@ header h1 {
  border-bottom: 2px solid #e5e7eb;
 }
 
-
 /* LEFT CONTROLS */
-
 
 .left label,
 .left select {
@@ -126,14 +129,13 @@ header h1 {
 }
 
 .run-btn {
-  flex: 1;                       /* equal width buttons */
-  padding: 14px ;
+  flex: 1;
+  padding: 14px;
   font-size: 15px;
   font-weight: 700;
   border-radius: 10px;
   text-align: center;
 }
-
 
 .btn {
  padding: 8px 10px;
@@ -141,7 +143,7 @@ header h1 {
  border: 1px solid #ccc;
  background: #f7f7f8;
  cursor: pointer;
- font-weight:400;
+ font-weight: 400;
 }
 
 .btn.primary {
@@ -155,6 +157,7 @@ header h1 {
   color: #fff;
   border-color: var(--danger);
 }
+
 .btn {
  transition:
    transform 0.2s ease,
@@ -175,10 +178,8 @@ header h1 {
  filter: brightness(0.98);
 }
 
-
 /* CENTER PANEL - NEW DESIGN */
 .center {
-  
   min-height: calc(100vh - 120px);
 }
 
@@ -250,22 +251,7 @@ header h1 {
   color: #334155;
 }
 
-/* Controls Row - Selected Algo and Buttons in one line */
-.controls-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 12px;
-  padding: 10px 12px;
-  background: #f8fafc;
-  border-radius: 8px;
-  flex-wrap: wrap;
-}
-
-/* ----------------------------------------------- */
 /* STEP NAVIGATION */
-/* ----------------------------------------------- */
 
 .selectedAlgo {
   font-size: 13px;
@@ -284,6 +270,7 @@ header h1 {
   font-size: 12px;
   gap:1
 }
+
 .step-controls {
   display: inline-flex;
   align-items: center;
@@ -296,7 +283,7 @@ header h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;           /* remove uneven padding */
+  padding: 0;
   font-size: 13px;
   flex: none;
 }
@@ -309,6 +296,52 @@ header h1 {
   margin-left: 350px;
 }
 
+/* Auto Run Speed Menu */
+.autoRun-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.speed-menu {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  width: 100px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.speed-menu button {
+  padding: 8px;
+  font-size: 13px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  text-align: center;
+}
+
+.speed-menu button:hover {
+  background: #f1f5f9;
+}
+
+.speed-menu button:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.speed-menu button:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+.hidden {
+  display: none !important;
+}
+
 /* Step Log with Color Coding - Fixed height with scrollbar */
 
 .stepLog {
@@ -317,7 +350,6 @@ header h1 {
   flex-direction: column;
   min-height: 0;
 }
-
 
 .logBox {
  width: 100%;
@@ -352,6 +384,7 @@ header h1 {
   border-left-color: var(--log-compare);
   background: #fff7ed;
 }
+
 .log-swap, .log-moveP, .log-moveQ { 
   border-left-color: var(--log-swap);
   background: #fef2f2;
@@ -378,6 +411,10 @@ header h1 {
   background: #eff6ff;
 }
 
+.log-pivot-selection, .log-pivot-sort {
+  border-left-color: var(--log-pivot);
+  background: #fefce8;
+}
 
 /* RIGHT COLUMN */
 
@@ -386,8 +423,8 @@ header h1 {
  border: 1px solid #eee;
  padding: 8px;
  border-radius: 4px;
- 
 }
+
 .resultBox h3 {
   margin: 0 0 10px 0;
   font-size: 14px;
@@ -413,10 +450,140 @@ header h1 {
  border: 1px solid #eee;
 }
 
+/* Scalability Button */
+.scalability-btn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: #059669;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.scalability-btn:hover {
+  background: #047857;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+/* Modal Styling */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.graph-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px;
+  max-width: 90%;
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  z-index: 1001;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.graph-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.graph-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+#closeGraphBtn {
+  border: none;
+  background: #f1f5f9;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+#closeGraphBtn:hover {
+  background: #e2e8f0;
+  transform: scale(1.1);
+}
+
+.modal-controls {
+  margin-bottom: 20px;
+}
+
+.modal-controls label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #475569;
+  font-size: 14px;
+}
+
+#inputSizeDropdown {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 2px solid #cbd5e1;
+  font-size: 14px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#inputSizeDropdown:hover {
+  border-color: #94a3b8;
+}
+
+#inputSizeDropdown:focus {
+  outline: none;
+  border-color: #0b5ed7;
+}
+
+#scalabilityCanvas {
+  display: block;
+  margin: 0 auto;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.graph-message {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #444;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.graph-message hr {
+  display: none;
+}
 
 /* Keep responsiveness for small screens */
 @media (max-width: 1000px) {
-
   #container {
     padding: 20px;
   }
@@ -429,12 +596,14 @@ header h1 {
   .panel {
     height: auto;
   }
+  
+  .graph-modal {
+    width: 95%;
+  }
 }
-
 
 /* Reduce height issues for short viewports */
 @media (max-height: 900px) {
-
   header h1 {
     font-size: 16px;
   }
@@ -448,17 +617,9 @@ header h1 {
   }
 }
 
-
 /* Large screens */
 @media (min-width: 1400px) {
-
   #container {
     max-width: 1400px;
   }
 }
-
-
-
-
-
-
